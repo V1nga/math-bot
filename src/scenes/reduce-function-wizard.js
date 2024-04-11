@@ -2,6 +2,9 @@ const emoji = require("node-emoji");
 const telegraf = require("telegraf");
 const { Composer, Scenes: { WizardScene }, Markup } = telegraf;
 const { mdEscape } = require("../utils");
+const vega = require("vega");
+const fs = require("fs");
+const stackedBarChartSpec = require("../../stacked-bar-chart.spec.json");
 
 class ReduceFunctionWizard {
     scene;
@@ -14,6 +17,7 @@ class ReduceFunctionWizard {
             const equation = msgCtx.message.text;
             const steps = this.reducingEquation(equation);
             const msg = Object.keys(steps).map(index => mdEscape(steps[index].text) + "\n" + mdEscape(steps[index].value)).join("\n\n");
+            this.drawChart();
 
             await msgCtx.reply(msg, { parse_mode: 'MarkdownV2' });
 
@@ -42,12 +46,12 @@ class ReduceFunctionWizard {
                 text: "Подсчёт B:",
                 value: null
             },
-            A: {
-                text: "Подсчёт A:",
-                value: null
-            },
             ADet: {
                 text: "Определитель A:",
+                value: null
+            },
+            A: {
+                text: "Подсчёт A:",
                 value: null
             },
             Graph: {
@@ -56,7 +60,14 @@ class ReduceFunctionWizard {
             }
         };
 
-        const mdMatrix = (matrix) => "```\n" + matrix.map(row => row.join("\t")).join("\n") + "```";
+        const drawMatrix = (matrix) => {
+            const longestStr = (arr) => arr.reduce((max, n) => max.length > n.length ? max : n, '');
+            const colLength = longestStr(matrix.map(row => row.map(col => String(col))).map(row => longestStr(row)))?.length;
+
+            const mdMatrix = matrix.map(row => row.map(num => String(num).padStart(colLength)));
+
+            return "```\n" + mdMatrix.map(row => row.join("\t")).join("\n") + "```";
+        };
 
         const T = variables.A11 + variables.A22;
         steps.T.value = `T=${ T }`;
@@ -65,23 +76,23 @@ class ReduceFunctionWizard {
             [variables.A11, variables.A12],
             [variables.A12, variables.A22]
         ]
-        steps.BMatrix.value = mdMatrix(BMatrix);
+        steps.BMatrix.value = drawMatrix(BMatrix);
 
         const B = (variables.A11 * variables.A22) - (variables.A12 * variables.A12);
-        // steps.B.value = `B\=\n${ steps.BMatrix.value } \n\= (${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ B }`;
+        steps.B.value = `(${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ B }`;
 
         const AMatrixDet = [
             [variables.A11, variables.A12, variables.A1],
             [variables.A12, variables.A22, variables.A2],
             [variables.A1, variables.A2, variables.A0]
         ]
-        steps.ADet.value = mdMatrix(AMatrixDet);
+        steps.ADet.value = drawMatrix(AMatrixDet);
 
         const det =
             AMatrixDet[0][0] * (AMatrixDet[1][1] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][1]) -
             AMatrixDet[0][1] * (AMatrixDet[1][0] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][0]) +
             AMatrixDet[0][2] * (AMatrixDet[1][0] * AMatrixDet[2][1] - AMatrixDet[1][1] * AMatrixDet[2][0]);
-        // steps.ADet.value = `${ steps.A.value } \n\= ${ AMatrixDet[0][0] } * (${ AMatrixDet[1][1] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][1] }) - ${ AMatrixDet[0][1] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][0] }) + ${ AMatrixDet[0][2] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][1] } - ${ AMatrixDet[1][1] } * ${ AMatrixDet[2][0] }) \= ${ det }`;
+        steps.A.value = `(${ AMatrixDet[0][0] } * (${ AMatrixDet[1][1] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][1] })) - (${ AMatrixDet[0][1] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][0] })) + (${ AMatrixDet[0][2] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][1] } - ${ AMatrixDet[1][1] } * ${ AMatrixDet[2][0] })) \= ${ det }`;
 
         if (B > 0 && det !== 0 && T * det < 0) {
             steps.Graph.value = "Эллипс";
@@ -124,6 +135,26 @@ class ReduceFunctionWizard {
         });
 
         return variables;
+    }
+
+    drawChart() {
+        let view = new vega
+            .View(vega.parse(stackedBarChartSpec))
+            .renderer('none')
+            .initialize();
+
+        view.toCanvas()
+            .then(function (canvas) {
+                // process node-canvas instance for example, generate a PNG stream to write var
+                // stream = canvas.createPNGStream();
+                console.log('Writing PNG to file...')
+                console.log(canvas)
+                fs.writeFileSync('stackedBarChart.png', canvas.toBuffer())
+            })
+            .catch(function (err) {
+                console.log("Error writing PNG to file:");
+                console.error(err);
+            });
     }
 }
 

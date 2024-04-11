@@ -7,7 +7,7 @@ async function startCommand(ctx) {
             [Markup.button.callback("Кривая 2-го порядка", "reducing-function")],
         ]
 
-        await ctx.msgCtx.reply("test", { reply_markup: { inline_keyboard: buttons } });
+        await ctx.msgCtx.reply("Меню", { reply_markup: { inline_keyboard: buttons } });
     } catch (ex) {
         console.log(ex);
     }

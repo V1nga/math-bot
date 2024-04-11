@@ -8,8 +8,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "canvas": "^2.11.2",
     "node-emoji": "^1.11.0",
-    "telegraf": "^4.12.2"
+    "telegraf": "^4.12.2",
+    "vega": "^5.28.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
