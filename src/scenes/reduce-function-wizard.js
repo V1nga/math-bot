@@ -82,7 +82,7 @@ class ReduceFunctionWizard {
         };
 
         let I1 = vars.A11 + vars.A22;
-        steps.I1.value = `I1=${ I1 }`
+        steps.I1.value = `I₁=${ I1 }`
 
         let I2Det = [
             [vars.A11, vars.A12],
@@ -90,7 +90,7 @@ class ReduceFunctionWizard {
         ];
         let I2 = (I2Det[0][0] * I2Det[1][1]) - (I2Det[0][1] * I2Det[1][0]);
         steps.I2Det.value = drawMatrix(I2Det);
-        steps.I2.value = `(${ I2Det[0][0] } * ${ I2Det[1][1] }) - (${ I2Det[0][1] } * ${ I2Det[1][0] }) \= ${ I2 }`;
+        steps.I2.value = `I₂=(${ I2Det[0][0] } * ${ I2Det[1][1] }) - (${ I2Det[0][1] } * ${ I2Det[1][0] }) \= ${ I2 }`;
 
         const I3Det = [
             [vars.A11, vars.A12, vars.A13],
@@ -102,7 +102,7 @@ class ReduceFunctionWizard {
             I3Det[0][1] * (I3Det[1][0] * I3Det[2][2] - I3Det[1][2] * I3Det[2][0]) +
             I3Det[0][2] * (I3Det[1][0] * I3Det[2][1] - I3Det[1][1] * I3Det[2][0]);
         steps.I3Det.value = drawMatrix(I3Det);
-        steps.I3.value = `(${ I3Det[0][0] } * (${ I3Det[1][1] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][1] })) - (${ I3Det[0][1] } * (${ I3Det[1][0] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][0] })) + (${ I3Det[0][2] } * (${ I3Det[1][0] } * ${ I3Det[2][1] } - ${ I3Det[1][1] } * ${ I3Det[2][0] })) \= ${ I3 }`;
+        steps.I3.value = `I₃=(${ I3Det[0][0] } * (${ I3Det[1][1] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][1] })) - (${ I3Det[0][1] } * (${ I3Det[1][0] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][0] })) + (${ I3Det[0][2] } * (${ I3Det[1][0] } * ${ I3Det[2][1] } - ${ I3Det[1][1] } * ${ I3Det[2][0] })) \= ${ I3 }`;
 
         const K2Det1 = [
             [vars.A11, vars.A13],
@@ -117,7 +117,7 @@ class ReduceFunctionWizard {
         if (I2 > 0 && I3 !== 0 && I1 * I3 < 0) {
             //4x^2-8x+4y^2+4y-11=0
             steps.GraphType.value = "Эллипс";
-            steps.CharacteristicEquation.value = `x^2-${ I1 }+${ I2 }`
+            steps.CharacteristicEquation.value = `x²-${ I1 }+${ I2 }`
 
             let a = 1;
             let b = I1 * -1;
@@ -127,7 +127,7 @@ class ReduceFunctionWizard {
             let x1 = (b * -1 + discriminant) / 2*a;
             let x2 = (b * -1 - discriminant) / 2*a;
 
-            steps.CanonicalForm.value = `${ x1 }x^2+${ x2 }y^2${ I3 / I2}`;
+            steps.CanonicalForm.value = `${ x1 }x²+${ x2 }y²${ I3 / I2}`;
         } else if (I1 < 0 && I3 !== 0) {
             steps.GraphType.value = "Гипербола";
         } else if (I1 === 0 && I3 !== 0) {
