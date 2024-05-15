@@ -2,24 +2,28 @@ const emoji = require("node-emoji");
 const telegraf = require("telegraf");
 const { Composer, Scenes: { WizardScene }, Markup } = telegraf;
 const { mdEscape } = require("../utils");
-const vega = require("vega");
-const fs = require("fs");
-const stackedBarChartSpec = require("../../stacked-bar-chart.spec.json");
+const D3Node = require("d3-node");
+const svg2png = require("svg2png");
+// const vega = require("vega");
+// const fs = require("fs");
+// const stackedBarChartSpec = require("../../stacked-bar-chart.spec.json");
+// const { SVG } = require("@svgdotjs/svg.js");
 
 class ReduceFunctionWizard {
     scene;
 
     constructor(ctx) {
-        const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":moneybag: Введите кривую 2-го порядка"));
+        const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":black_nib: Введите кривую 2-го порядка"));
 
         const equationStep = new Composer();
         equationStep.on("text", async (msgCtx) => {
             const equation = msgCtx.message.text;
             const steps = this.reducingEquation(equation);
             const msg = Object.keys(steps).map(index => mdEscape(steps[index].text) + "\n" + mdEscape(steps[index].value)).join("\n\n");
-            this.drawChart();
+            let chart = this.drawChart();
 
             await msgCtx.reply(msg, { parse_mode: 'MarkdownV2' });
+            await msgCtx.replyWithPhoto({ source: chart });
 
             return msgCtx.scene.leave();
         });
@@ -31,34 +35,42 @@ class ReduceFunctionWizard {
     }
 
      reducingEquation(equation) {
-        let variables = this.parseEquation(equation);
+        let vars = this.parseEquation(equation);
 
-        const steps= {
-            T: {
-                text: "Подсчёт T:",
+        const steps = {
+            I1: {
+                text: "Коэффициент 1-го инварианта",
                 value: null
             },
-            BMatrix: {
-                text: "Матрица B:",
+            I2Det: {
+                text: "Определитель 2-го инварианта",
+                value: []
+            },
+            I2: {
+                text: "Коэффициент 2-го инварианта",
                 value: null
             },
-            B: {
-                text: "Подсчёт B:",
+            I3Det: {
+                text: "Определитель 3-го инварианта",
+                value: []
+            },
+            I3: {
+                text: "Коэффициент 3-го инварианта",
                 value: null
             },
-            ADet: {
-                text: "Определитель A:",
+            GraphType: {
+                text: "Фигура:",
                 value: null
             },
-            A: {
-                text: "Подсчёт A:",
+            CharacteristicEquation: {
+                text: "Характеристическое уравнение:",
                 value: null
             },
-            Graph: {
-                text: "Тип графика:",
+            CanonicalForm: {
+                text: "Канонический вид:",
                 value: null
             }
-        };
+        }
 
         const drawMatrix = (matrix) => {
             const longestStr = (arr) => arr.reduce((max, n) => max.length > n.length ? max : n, '');
@@ -69,37 +81,57 @@ class ReduceFunctionWizard {
             return "```\n" + mdMatrix.map(row => row.join("\t")).join("\n") + "```";
         };
 
-        const T = variables.A11 + variables.A22;
-        steps.T.value = `T=${ T }`;
+        let I1 = vars.A11 + vars.A22;
+        steps.I1.value = `I1=${ I1 }`
 
-        const BMatrix = [
-            [variables.A11, variables.A12],
-            [variables.A12, variables.A22]
+        let I2Det = [
+            [vars.A11, vars.A12],
+            [vars.A12, vars.A22]
+        ];
+        let I2 = (I2Det[0][0] * I2Det[1][1]) - (I2Det[0][1] * I2Det[1][0]);
+        steps.I2Det.value = drawMatrix(I2Det);
+        steps.I2.value = `(${ I2Det[0][0] } * ${ I2Det[1][1] }) - (${ I2Det[0][1] } * ${ I2Det[1][0] }) \= ${ I2 }`;
+
+        const I3Det = [
+            [vars.A11, vars.A12, vars.A13],
+            [vars.A12, vars.A22, vars.A23],
+            [vars.A13, vars.A23, vars.A33]
         ]
-        steps.BMatrix.value = drawMatrix(BMatrix);
+        const I3 =
+            I3Det[0][0] * (I3Det[1][1] * I3Det[2][2] - I3Det[1][2] * I3Det[2][1]) -
+            I3Det[0][1] * (I3Det[1][0] * I3Det[2][2] - I3Det[1][2] * I3Det[2][0]) +
+            I3Det[0][2] * (I3Det[1][0] * I3Det[2][1] - I3Det[1][1] * I3Det[2][0]);
+        steps.I3Det.value = drawMatrix(I3Det);
+        steps.I3.value = `(${ I3Det[0][0] } * (${ I3Det[1][1] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][1] })) - (${ I3Det[0][1] } * (${ I3Det[1][0] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][0] })) + (${ I3Det[0][2] } * (${ I3Det[1][0] } * ${ I3Det[2][1] } - ${ I3Det[1][1] } * ${ I3Det[2][0] })) \= ${ I3 }`;
 
-        const B = (variables.A11 * variables.A22) - (variables.A12 * variables.A12);
-        steps.B.value = `(${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ B }`;
-
-        const AMatrixDet = [
-            [variables.A11, variables.A12, variables.A1],
-            [variables.A12, variables.A22, variables.A2],
-            [variables.A1, variables.A2, variables.A0]
+        const K2Det1 = [
+            [vars.A11, vars.A13],
+            [vars.A13, vars.A33]
         ]
-        steps.ADet.value = drawMatrix(AMatrixDet);
+        const K2Det2 = [
+            [vars.A22, vars.A23],
+            [vars.A23, vars.A33]
+        ]
+        const K2 = ((K2Det1[0][0] * K2Det1[1][1]) - (K2Det1[0][1] * K2Det1[1][0])) + ((K2Det2[0][0] * K2Det2[1][1]) - (K2Det2[0][1] * K2Det2[1][0]));
 
-        const det =
-            AMatrixDet[0][0] * (AMatrixDet[1][1] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][1]) -
-            AMatrixDet[0][1] * (AMatrixDet[1][0] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][0]) +
-            AMatrixDet[0][2] * (AMatrixDet[1][0] * AMatrixDet[2][1] - AMatrixDet[1][1] * AMatrixDet[2][0]);
-        steps.A.value = `(${ AMatrixDet[0][0] } * (${ AMatrixDet[1][1] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][1] })) - (${ AMatrixDet[0][1] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][0] })) + (${ AMatrixDet[0][2] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][1] } - ${ AMatrixDet[1][1] } * ${ AMatrixDet[2][0] })) \= ${ det }`;
+        if (I2 > 0 && I3 !== 0 && I1 * I3 < 0) {
+            //4x^2-8x+4y^2+4y-11=0
+            steps.GraphType.value = "Эллипс";
+            steps.CharacteristicEquation.value = `x^2-${ I1 }+${ I2 }`
 
-        if (B > 0 && det !== 0 && T * det < 0) {
-            steps.Graph.value = "Эллипс";
-        } else if (B < 0 && det !== 0) {
-            steps.Graph.value = "Гипербола";
-        } else if (B === 0 && det !== 0) {
-            steps.Graph.value = "Парабола";
+            let a = 1;
+            let b = I1 * -1;
+            let c = I2;
+
+            let discriminant = (b*b)-(4*a*c);
+            let x1 = (b * -1 + discriminant) / 2*a;
+            let x2 = (b * -1 - discriminant) / 2*a;
+
+            steps.CanonicalForm.value = `${ x1 }x^2+${ x2 }y^2${ I3 / I2}`;
+        } else if (I1 < 0 && I3 !== 0) {
+            steps.GraphType.value = "Гипербола";
+        } else if (I1 === 0 && I3 !== 0) {
+            steps.GraphType.value = "Парабола";
         }
 
         return steps;
@@ -112,12 +144,13 @@ class ReduceFunctionWizard {
         let variables = {
             A11: 0,
             A12: 0,
+            A13: 0,
             A22: 0,
-            A1: 0,
-            A2: 0,
-            A0: 0
+            A23: 0,
+            A33: 0
         }
 
+        //4x^2-8x+4y^2+4y-11=0
         terms.forEach(term => {
             if (term.includes('x^2')) {
                 variables.A11 += Number(term.split('x^2')[0]);
@@ -126,35 +159,129 @@ class ReduceFunctionWizard {
             } else if (term.includes('xy')) {
                 variables.A12 += Number(term.split('xy')[0]);
             } else if (term.includes('x')) {
-                variables.A1 += Number(term.replace(/x/, ''));
+                variables.A13 += Number(term.replace(/x/, '')) / 2;
             } else if (term.includes('y')) {
-                variables.A1 += Number(term.replace(/y/, ''));
+                variables.A23 += Number(term.replace(/y/, '')) / 2;
             } else {
-                variables.A0 += Number(term);
+                variables.A33 += Number(term);
             }
         });
 
         return variables;
     }
 
-    drawChart() {
-        let view = new vega
-            .View(vega.parse(stackedBarChartSpec))
-            .renderer('none')
-            .initialize();
+    // rootNode
+    //     .append("text")
+    //     .attr("x", (width / 2) + xStep)
+    //     .attr("y", (height / 2) + 20)
+    //     .text(i);
 
-        view.toCanvas()
-            .then(function (canvas) {
-                // process node-canvas instance for example, generate a PNG stream to write var
-                // stream = canvas.createPNGStream();
-                console.log('Writing PNG to file...')
-                console.log(canvas)
-                fs.writeFileSync('stackedBarChart.png', canvas.toBuffer())
-            })
-            .catch(function (err) {
-                console.log("Error writing PNG to file:");
-                console.error(err);
-            });
+    drawChart() {
+        const svgNode = new D3Node();
+
+        const width = 1000;
+        const height = 1000;
+
+        let rootNode = svgNode.createSVG(width, height);
+
+        // x-axis
+        rootNode
+            .append("line")
+            .attr("x1", width / 2)
+            .attr("x2", width / 2)
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        // y-axis
+        rootNode
+            .append("line")
+            .attr("x1", 0)
+            .attr("x2", width)
+            .attr("y1", height / 2)
+            .attr("y2", height / 2)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        const delimiters = 10;
+
+        // X mark
+        rootNode
+            .append("text")
+            .attr("x", width - 20)
+            .attr("y", (height / 2) + 20)
+            .text("X");
+        // Y mark
+        rootNode
+            .append("text")
+            .attr("x", (width / 2) + 5)
+            .attr("y", 20)
+            .text("Y");
+        // ZERO mark
+        rootNode
+            .append("text")
+            .attr("x", (width / 2) + 5)
+            .attr("y", (height / 2) + 20)
+            .text(0);
+
+        // negative x-axis delimiters
+        for (let i = 1; i <= delimiters; i++) {
+            const xStep = (i * (((width - (width / 2 * 0.25)) / 2) / delimiters));
+
+            rootNode
+                .append("line")
+                .attr("x1", (width / 2) - xStep)
+                .attr("x2", (width / 2) - xStep)
+                .attr("y1", height / 2 - 10)
+                .attr("y2", height / 2 + 11)
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+        }
+        // positive x-axis delimiters
+        for (let i = 1; i <= delimiters; i++) {
+            const xStep = (i * (((width - (width / 2 * 0.25)) / 2) / delimiters));
+
+            rootNode
+                .append("line")
+                .attr("x1", (width / 2) + xStep)
+                .attr("x2", (width / 2) + xStep)
+                .attr("y1", height / 2 - 10)
+                .attr("y2", height / 2 + 11)
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+        }
+
+        // negative y-axis delimiters
+        for (let i = 1; i <= delimiters; i++) {
+            const yStep = (i * (((height - (height / 2 * 0.25)) / 2) / delimiters));
+
+            rootNode
+                .append("line")
+                .attr("x1", width / 2 - 10)
+                .attr("x2", width / 2 + 11)
+                .attr("y1", (height / 2) + yStep)
+                .attr("y2", (height / 2) + yStep)
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+        }
+        // positive y-axis delimiters
+        for (let i = 1; i <= delimiters; i++) {
+            const yStep = (i * (((height - (height / 2 * 0.25)) / 2) / delimiters));
+
+            rootNode
+                .append("line")
+                .attr("x1", width / 2 - 10)
+                .attr("x2", width / 2 + 11)
+                .attr("y1", (height / 2) - yStep)
+                .attr("y2", (height / 2) - yStep)
+                .attr("stroke", "black")
+                .attr("stroke-width", 1);
+        }
+
+        const bufferedSvg = Buffer.from(svgNode.svgString(), "utf-8");
+
+        return svg2png.sync(bufferedSvg);
     }
 }
 
