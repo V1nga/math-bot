@@ -9,6 +9,12 @@ const svg2png = require("svg2png");
 // const stackedBarChartSpec = require("../../stacked-bar-chart.spec.json");
 // const { SVG } = require("@svgdotjs/svg.js");
 
+const ChartTypes = {
+    ELLIPSE: "Эллипс",
+    HYPERBOLE: "Гипербола",
+    PARABOLA: "Парабола"
+}
+
 class ReduceFunctionWizard {
     scene;
 
@@ -20,7 +26,7 @@ class ReduceFunctionWizard {
             const equation = msgCtx.message.text;
             const steps = this.reducingEquation(equation);
             const msg = Object.keys(steps).map(index => mdEscape(steps[index].text) + "\n" + mdEscape(steps[index].value)).join("\n\n");
-            let chart = this.drawChart();
+            let chart = this.drawChart(steps.GraphType.value, steps.CanonicalForm.value ?? equation);
 
             await msgCtx.reply(msg, { parse_mode: 'MarkdownV2' });
             await msgCtx.replyWithPhoto({ source: chart });
@@ -116,7 +122,7 @@ class ReduceFunctionWizard {
 
         if (I2 > 0 && I3 !== 0 && I1 * I3 < 0) {
             //4x^2-8x+4y^2+4y-11=0
-            steps.GraphType.value = "Эллипс";
+            steps.GraphType.value = ChartTypes.ELLIPSE;
             steps.CharacteristicEquation.value = `x²-${ I1 }+${ I2 }`
 
             let a = 1;
@@ -129,9 +135,9 @@ class ReduceFunctionWizard {
 
             steps.CanonicalForm.value = `${ x1 }x²+${ x2 }y²${ I3 / I2}`;
         } else if (I1 < 0 && I3 !== 0) {
-            steps.GraphType.value = "Гипербола";
+            steps.GraphType.value = ChartTypes.HYPERBOLE;
         } else if (I1 === 0 && I3 !== 0) {
-            steps.GraphType.value = "Парабола";
+            steps.GraphType.value = ChartTypes.PARABOLA;
         }
 
         return steps;
@@ -176,7 +182,7 @@ class ReduceFunctionWizard {
     //     .attr("y", (height / 2) + 20)
     //     .text(i);
 
-    drawChart() {
+    drawChart(type, equation) {
         const svgNode = new D3Node();
 
         const width = 1000;
@@ -237,6 +243,12 @@ class ReduceFunctionWizard {
                 .attr("y2", height / 2 + 11)
                 .attr("stroke", "black")
                 .attr("stroke-width", 1);
+
+            rootNode
+                .append("text")
+                .attr("x", (width / 2) - xStep - 10)
+                .attr("y", (height / 2) + 30)
+                .text("-" + i);
         }
         // positive x-axis delimiters
         for (let i = 1; i <= delimiters; i++) {
@@ -250,6 +262,12 @@ class ReduceFunctionWizard {
                 .attr("y2", height / 2 + 11)
                 .attr("stroke", "black")
                 .attr("stroke-width", 1);
+
+            rootNode
+                .append("text")
+                .attr("x", (width / 2) + xStep - 5)
+                .attr("y", (height / 2) + 30)
+                .text(i);
         }
 
         // negative y-axis delimiters
@@ -264,6 +282,12 @@ class ReduceFunctionWizard {
                 .attr("y2", (height / 2) + yStep)
                 .attr("stroke", "black")
                 .attr("stroke-width", 1);
+
+            rootNode
+                .append("text")
+                .attr("x", (width / 2) + 20)
+                .attr("y", (height / 2) + yStep + 5)
+                .text("-" + i);
         }
         // positive y-axis delimiters
         for (let i = 1; i <= delimiters; i++) {
@@ -277,6 +301,53 @@ class ReduceFunctionWizard {
                 .attr("y2", (height / 2) - yStep)
                 .attr("stroke", "black")
                 .attr("stroke-width", 1);
+
+            rootNode
+                .append("text")
+                .attr("x", (width / 2) + 25)
+                .attr("y", (height / 2) - yStep + 5)
+                .text(i);
+        }
+
+        //chart render
+        if (type === ChartTypes.ELLIPSE) {
+            rootNode
+                .append("circle")
+                .attr("cx", (width / 2) + 40)
+                .attr("cy", (height / 2) + 40)
+                .attr("r", 100)
+                .attr("fill", "transparent")
+                .attr("stroke", "black")
+                .attr("stroke-width", 2);
+
+            // rootNode
+            //     .append("path")
+            //     .attr("d", "M 100 350 q 150 -300 300 0")
+            //     .attr("fill", "none")
+            //     .attr("stroke", "black")
+            //     .attr("stroke-width", 2);
+
+            // rootNode
+            //     .append("path")
+            //     .attr("d", "M 0 150 S 500 600 100 1000")
+            //     .attr("fill", "none")
+            //     .attr("stroke", "black")
+            //     .attr("stroke-width", 2);
+        } else if (type === ChartTypes.HYPERBOLE) {
+            rootNode
+                .append("path")
+                .attr("d", "M 0 150 C 350 600 350 600 100 1000")
+                .attr("fill", "none")
+                .attr("stroke", "black")
+                .attr("stroke-width", 2);
+            rootNode
+                .append("path")
+                .attr("d", "M 900 0 C 500 600 500 600 800 1000")
+                .attr("fill", "none")
+                .attr("stroke", "black")
+                .attr("stroke-width", 2);
+        } else if (type === ChartTypes.PARABOLA) {
+
         }
 
         const bufferedSvg = Buffer.from(svgNode.svgString(), "utf-8");
