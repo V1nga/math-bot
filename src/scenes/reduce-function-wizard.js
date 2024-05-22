@@ -3,11 +3,16 @@ const telegraf = require("telegraf");
 const { Composer, Scenes: { WizardScene }, Markup } = telegraf;
 const { mdEscape } = require("../utils");
 
+const ChartTypes = {
+    ELLIPSE: "Эллипс",
+    HYPERBOLE: "Гипербола",
+    PARABOLA: "Парабола"
+}
 class ReduceFunctionWizard {
     scene;
 
     constructor(ctx) {
-        const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":moneybag: Введите кривую 2-го порядка"));
+        const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":black_nib: Введите кривую 2-го порядка"));
 
         const equationStep = new Composer();
         equationStep.on("text", async (msgCtx) => {
@@ -30,65 +35,88 @@ class ReduceFunctionWizard {
         let variables = this.parseEquation(equation);
 
         const steps= {
-            T: {
-                text: "Подсчёт T:",
+            TCoefficient: {
+                text: "Коэффициент A+C:",
                 value: null
             },
             BMatrix: {
-                text: "Матрица B:",
+                text: "Матрица δ:",
                 value: null
             },
-            B: {
-                text: "Подсчёт B:",
+            BDeterminant: {
+                text: "Коэффициент δ:",
                 value: null
             },
-            A: {
-                text: "Подсчёт A:",
+            ADeterminant: {
+                text: "Коэффициент Δ:",
                 value: null
             },
-            ADet: {
-                text: "Определитель A:",
+            AMatrix: {
+                text: "Определитель Δ:",
                 value: null
             },
-            Graph: {
+            GraphType: {
                 text: "Тип графика:",
+                value: null
+            },
+            CanonicalForm: {
+                text: "Канонический вид:",
                 value: null
             }
         };
 
-        const mdMatrix = (matrix) => "```\n" + matrix.map(row => row.join("\t")).join("\n") + "```";
+         const drawMatrix = (matrix) => {
+             const longestStr = (arr) => arr.reduce((max, n) => max.length > n.length ? max : n, '');
+             const colLength = longestStr(matrix.map(row => row.map(col => String(col))).map(row => longestStr(row)))?.length;
 
-        const T = variables.A11 + variables.A22;
-        steps.T.value = `T=${ T }`;
+             const mdMatrix = matrix.map(row => row.map(num => String(num).padStart(colLength)));
 
-        const BMatrix = [
+             return "```\n" + mdMatrix.map(row => row.join("\t")).join("\n") + "```";
+         };
+
+        const tCoefficient = variables.A11 + variables.A22;
+        steps.TCoefficient.value = `A + C = ${ tCoefficient }`;
+
+        const bMatrix = [
             [variables.A11, variables.A12],
             [variables.A12, variables.A22]
         ]
-        steps.BMatrix.value = mdMatrix(BMatrix);
+        steps.BMatrix.value = drawMatrix(bMatrix);
 
-        const B = (variables.A11 * variables.A22) - (variables.A12 * variables.A12);
-        // steps.B.value = `B\=\n${ steps.BMatrix.value } \n\= (${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ B }`;
+        const bDeterminant = (variables.A11 * variables.A22) - (variables.A12 * variables.A12);
+        steps.BDeterminant.value = `δ \= (${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ bDeterminant }`;
 
-        const AMatrixDet = [
+        const aMatrix = [
             [variables.A11, variables.A12, variables.A1],
             [variables.A12, variables.A22, variables.A2],
             [variables.A1, variables.A2, variables.A0]
         ]
-        steps.ADet.value = mdMatrix(AMatrixDet);
+        steps.AMatrix.value = drawMatrix(aMatrix);
 
-        const det =
-            AMatrixDet[0][0] * (AMatrixDet[1][1] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][1]) -
-            AMatrixDet[0][1] * (AMatrixDet[1][0] * AMatrixDet[2][2] - AMatrixDet[1][2] * AMatrixDet[2][0]) +
-            AMatrixDet[0][2] * (AMatrixDet[1][0] * AMatrixDet[2][1] - AMatrixDet[1][1] * AMatrixDet[2][0]);
-        // steps.ADet.value = `${ steps.A.value } \n\= ${ AMatrixDet[0][0] } * (${ AMatrixDet[1][1] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][1] }) - ${ AMatrixDet[0][1] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][2] } - ${ AMatrixDet[1][2] } * ${ AMatrixDet[2][0] }) + ${ AMatrixDet[0][2] } * (${ AMatrixDet[1][0] } * ${ AMatrixDet[2][1] } - ${ AMatrixDet[1][1] } * ${ AMatrixDet[2][0] }) \= ${ det }`;
+        const aDeterminant =
+            aMatrix[0][0] * (aMatrix[1][1] * aMatrix[2][2] - aMatrix[1][2] * aMatrix[2][1]) -
+            aMatrix[0][1] * (aMatrix[1][0] * aMatrix[2][2] - aMatrix[1][2] * aMatrix[2][0]) +
+            aMatrix[0][2] * (aMatrix[1][0] * aMatrix[2][1] - aMatrix[1][1] * aMatrix[2][0]);
+        steps.ADeterminant.value = `Δ \= ${ aMatrix[0][0] } * (${ aMatrix[1][1] } * ${ aMatrix[2][2] } - ${ Math.abs(aMatrix[1][2]) } * ${ aMatrix[2][1] }) - ${ Math.abs(aMatrix[0][1]) } * (${ aMatrix[1][0] } * ${ aMatrix[2][2] } - ${ Math.abs(aMatrix[1][2]) } * ${ aMatrix[2][0] }) + ${ aMatrix[0][2] } * (${ aMatrix[1][0] } * ${ aMatrix[2][1] } - ${ Math.abs(aMatrix[1][1]) } * ${ aMatrix[2][0] }) \= ${ aDeterminant }`;
 
-        if (B > 0 && det !== 0 && T * det < 0) {
-            steps.Graph.value = "Эллипс";
-        } else if (B < 0 && det !== 0) {
-            steps.Graph.value = "Гипербола";
-        } else if (B === 0 && det !== 0) {
-            steps.Graph.value = "Парабола";
+        if (bDeterminant > 0 && aDeterminant !== 0 && tCoefficient * aDeterminant < 0) {
+            steps.GraphType.value = ChartTypes.ELLIPSE;
+
+            const a = 1;
+            const b = -tCoefficient;
+            const c = bDeterminant;
+
+            const discriminant = Math.pow(b, 2) - (4 * a * c);
+
+            const aCoefficient = (-b - Math.sqrt(discriminant)) / (2 * a);
+            const cCoefficient = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const fCoefficient = aDeterminant / bDeterminant;
+
+            steps.CanonicalForm.value = `${ aCoefficient }x²+${ cCoefficient }y²${ fCoefficient }=0`;
+        } else if (bDeterminant < 0 && aDeterminant !== 0) {
+            steps.GraphType.value = ChartTypes.HYPERBOLE;
+        } else if (bDeterminant === 0 && aDeterminant !== 0) {
+            steps.GraphType.value = ChartTypes.PARABOLA;
         }
 
         return steps;
@@ -113,16 +141,16 @@ class ReduceFunctionWizard {
             } else if (term.includes('y^2')) {
                 variables.A22 += Number(term.split('y^2')[0]);
             } else if (term.includes('xy')) {
-                variables.A12 += Number(term.split('xy')[0]);
+                variables.A12 += Number(term.split('xy')[0]) / 2;
             } else if (term.includes('x')) {
-                variables.A1 += Number(term.replace(/x/, ''));
+                variables.A1 += Number(term.replace(/x/, '')) / 2;
             } else if (term.includes('y')) {
-                variables.A1 += Number(term.replace(/y/, ''));
+                variables.A2 += Number(term.replace(/y/, '')) / 2;
             } else {
                 variables.A0 += Number(term);
             }
         });
-
+        
         return variables;
     }
 }
