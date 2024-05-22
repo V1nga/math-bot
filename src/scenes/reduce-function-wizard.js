@@ -15,6 +15,11 @@ const ChartTypes = {
     PARABOLA: "Парабола"
 }
 
+const ChartTypes = {
+    ELLIPSE: "Эллипс",
+    HYPERBOLE: "Гипербола",
+    PARABOLA: "Парабола"
+}
 class ReduceFunctionWizard {
     scene;
 
@@ -43,33 +48,29 @@ class ReduceFunctionWizard {
      reducingEquation(equation) {
         let vars = this.parseEquation(equation);
 
-        const steps = {
-            I1: {
-                text: "Коэффициент 1-го инварианта",
+        const steps= {
+            TCoefficient: {
+                text: "Коэффициент A+C:",
                 value: null
             },
-            I2Det: {
-                text: "Определитель 2-го инварианта",
-                value: []
-            },
-            I2: {
-                text: "Коэффициент 2-го инварианта",
+            BMatrix: {
+                text: "Матрица δ:",
                 value: null
             },
-            I3Det: {
-                text: "Определитель 3-го инварианта",
-                value: []
+            BDeterminant: {
+                text: "Коэффициент δ:",
+                value: null
             },
-            I3: {
-                text: "Коэффициент 3-го инварианта",
+            ADeterminant: {
+                text: "Коэффициент Δ:",
+                value: null
+            },
+            AMatrix: {
+                text: "Определитель Δ:",
                 value: null
             },
             GraphType: {
-                text: "Фигура:",
-                value: null
-            },
-            CharacteristicEquation: {
-                text: "Характеристическое уравнение:",
+                text: "Тип графика:",
                 value: null
             },
             CanonicalForm: {
@@ -87,56 +88,48 @@ class ReduceFunctionWizard {
             return "```\n" + mdMatrix.map(row => row.join("\t")).join("\n") + "```";
         };
 
-        let I1 = vars.A11 + vars.A22;
-        steps.I1.value = `I₁=${ I1 }`
+        const tCoefficient = variables.A11 + variables.A22;
+        steps.TCoefficient.value = `A + C = ${ tCoefficient }`;
 
-        let I2Det = [
-            [vars.A11, vars.A12],
-            [vars.A12, vars.A22]
-        ];
-        let I2 = (I2Det[0][0] * I2Det[1][1]) - (I2Det[0][1] * I2Det[1][0]);
-        steps.I2Det.value = drawMatrix(I2Det);
-        steps.I2.value = `I₂=(${ I2Det[0][0] } * ${ I2Det[1][1] }) - (${ I2Det[0][1] } * ${ I2Det[1][0] }) \= ${ I2 }`;
-
-        const I3Det = [
-            [vars.A11, vars.A12, vars.A13],
-            [vars.A12, vars.A22, vars.A23],
-            [vars.A13, vars.A23, vars.A33]
+        const bMatrix = [
+            [variables.A11, variables.A12],
+            [variables.A12, variables.A22]
         ]
-        const I3 =
-            I3Det[0][0] * (I3Det[1][1] * I3Det[2][2] - I3Det[1][2] * I3Det[2][1]) -
-            I3Det[0][1] * (I3Det[1][0] * I3Det[2][2] - I3Det[1][2] * I3Det[2][0]) +
-            I3Det[0][2] * (I3Det[1][0] * I3Det[2][1] - I3Det[1][1] * I3Det[2][0]);
-        steps.I3Det.value = drawMatrix(I3Det);
-        steps.I3.value = `I₃=(${ I3Det[0][0] } * (${ I3Det[1][1] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][1] })) - (${ I3Det[0][1] } * (${ I3Det[1][0] } * ${ I3Det[2][2] } - ${ I3Det[1][2] } * ${ I3Det[2][0] })) + (${ I3Det[0][2] } * (${ I3Det[1][0] } * ${ I3Det[2][1] } - ${ I3Det[1][1] } * ${ I3Det[2][0] })) \= ${ I3 }`;
+        steps.BMatrix.value = drawMatrix(bMatrix);
 
-        const K2Det1 = [
-            [vars.A11, vars.A13],
-            [vars.A13, vars.A33]
-        ]
-        const K2Det2 = [
-            [vars.A22, vars.A23],
-            [vars.A23, vars.A33]
-        ]
-        const K2 = ((K2Det1[0][0] * K2Det1[1][1]) - (K2Det1[0][1] * K2Det1[1][0])) + ((K2Det2[0][0] * K2Det2[1][1]) - (K2Det2[0][1] * K2Det2[1][0]));
+        const bDeterminant = (variables.A11 * variables.A22) - (variables.A12 * variables.A12);
+        steps.BDeterminant.value = `δ \= (${ variables.A11 } * ${ variables.A22 }) - (${ variables.A12} * ${ variables.A12}) \= ${ bDeterminant }`;
 
-        if (I2 > 0 && I3 !== 0 && I1 * I3 < 0) {
-            //4x^2-8x+4y^2+4y-11=0
+        const aMatrix = [
+            [variables.A11, variables.A12, variables.A1],
+            [variables.A12, variables.A22, variables.A2],
+            [variables.A1, variables.A2, variables.A0]
+        ]
+        steps.AMatrix.value = drawMatrix(aMatrix);
+
+        const aDeterminant =
+            aMatrix[0][0] * (aMatrix[1][1] * aMatrix[2][2] - aMatrix[1][2] * aMatrix[2][1]) -
+            aMatrix[0][1] * (aMatrix[1][0] * aMatrix[2][2] - aMatrix[1][2] * aMatrix[2][0]) +
+            aMatrix[0][2] * (aMatrix[1][0] * aMatrix[2][1] - aMatrix[1][1] * aMatrix[2][0]);
+        steps.ADeterminant.value = `Δ \= ${ aMatrix[0][0] } * (${ aMatrix[1][1] } * ${ aMatrix[2][2] } - ${ Math.abs(aMatrix[1][2]) } * ${ aMatrix[2][1] }) - ${ Math.abs(aMatrix[0][1]) } * (${ aMatrix[1][0] } * ${ aMatrix[2][2] } - ${ Math.abs(aMatrix[1][2]) } * ${ aMatrix[2][0] }) + ${ aMatrix[0][2] } * (${ aMatrix[1][0] } * ${ aMatrix[2][1] } - ${ Math.abs(aMatrix[1][1]) } * ${ aMatrix[2][0] }) \= ${ aDeterminant }`;
+
+        if (bDeterminant > 0 && aDeterminant !== 0 && tCoefficient * aDeterminant < 0) {
             steps.GraphType.value = ChartTypes.ELLIPSE;
-            steps.CharacteristicEquation.value = `x²-${ I1 }+${ I2 }`
 
-            let a = 1;
-            let b = I1 * -1;
-            let c = I2;
+            const a = 1;
+            const b = -tCoefficient;
+            const c = bDeterminant;
 
-            let discriminant = (b*b)-(4*a*c);
-            let x1 = (b * -1 + discriminant) / 2*a;
-            let x2 = (b * -1 - discriminant) / 2*a;
+            const discriminant = Math.pow(b, 2) - (4 * a * c);
 
-            steps.CanonicalForm.value = `${ x1 }x²+${ x2 }y²${ I3 / I2}`;
-        } else if (I1 < 0 && I3 !== 0) {
+            const aCoefficient = (-b - Math.sqrt(discriminant)) / (2 * a);
+            const cCoefficient = (-b + Math.sqrt(discriminant)) / (2 * a);
+            const fCoefficient = aDeterminant / bDeterminant;
+
+            steps.CanonicalForm.value = `${ aCoefficient }x²+${ cCoefficient }y²${ fCoefficient }=0`;
+        } else if (bDeterminant < 0 && aDeterminant !== 0) {
             steps.GraphType.value = ChartTypes.HYPERBOLE;
-        } else if (I1 === 0 && I3 !== 0) {
+        } else if (bDeterminant === 0 && aDeterminant !== 0) {
             steps.GraphType.value = ChartTypes.PARABOLA;
         }
 
@@ -163,16 +156,16 @@ class ReduceFunctionWizard {
             } else if (term.includes('y^2')) {
                 variables.A22 += Number(term.split('y^2')[0]);
             } else if (term.includes('xy')) {
-                variables.A12 += Number(term.split('xy')[0]);
+                variables.A12 += Number(term.split('xy')[0]) / 2;
             } else if (term.includes('x')) {
-                variables.A13 += Number(term.replace(/x/, '')) / 2;
+                variables.A1 += Number(term.replace(/x/, '')) / 2;
             } else if (term.includes('y')) {
-                variables.A23 += Number(term.replace(/y/, '')) / 2;
+                variables.A2 += Number(term.replace(/y/, '')) / 2;
             } else {
                 variables.A33 += Number(term);
             }
         });
-
+        
         return variables;
     }
 

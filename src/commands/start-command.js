@@ -1,4 +1,3 @@
-// import emoji from "node-emoji";
 const { Markup } = require("telegraf");
 const emoji = require("node-emoji");
 
