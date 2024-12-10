@@ -13,9 +13,10 @@ const map = {
     ">": "&gt;",
     "&": "&amp;",
     "=": "\\=",
-    "|": "&#124;"
+    "|": "&#124;",
+    ".": "\\.",
 };
 
-const mdEscape = (str) => str?.replace(/[|*()\[\]+\-\\_=#<>]/g, m => map[m]);
+const mdEscape = (str) => str?.replace(/[|*()\[\]+\-\\_.=#<>]/g, m => map[m]);
 
 module.exports = { mdEscape };
