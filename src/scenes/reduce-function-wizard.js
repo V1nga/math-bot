@@ -158,6 +158,8 @@ class ReduceFunctionWizard {
         if(A !== 0) {
             parabolaVertices.x = -(D / A);
             parabolaVertices.y = -((F / (2 * E) - (Math.pow(D, 2) / (2 * E * A))));
+
+            //TO-DO
         } else {
             parabolaVertices.x = -(F / (2 * D)) + (Math.pow(E, 2) / ((2 * D) * C));
             parabolaVertices.y = -(E / C);
@@ -318,6 +320,7 @@ class ReduceFunctionWizard {
                 return `(x - ${ coefficients.zeroCoords.x.toFixed(1) })²/${ Math.abs(coefficients.bQuadCoefficient).toFixed(1) } - (y - ${ coefficients.zeroCoords.y.toFixed(1) })²/${ Math.abs(coefficients.aQuadCoefficient).toFixed(1) } = 1`;
             } else if (figureData.chartType === ChartTypes.PARABOLA) {
                 // return `(y - `;
+                // console.log(figureData);
                 return "";
             }
         }
