@@ -150,7 +150,10 @@ class ReduceFunctionWizard {
         };
 
         // Точки параболы
-        const pointsCoords = [];
+        const pointsCoords = {
+            firstBranch: [],
+            secondBranch: []
+        };
 
         if(A !== 0) {
             parabolaVertices.x = -(D / A);
@@ -166,11 +169,13 @@ class ReduceFunctionWizard {
                 const x = parabolaVertices.x + (i * Math.sign(pCoefficient));
 
                 // pointsCoords.push({ x: x, y: yFunc(x) + parabolaVertices.y });
-                pointsCoords.push({ x: x, y: parabolaVertices.y - yFunc(x)});
+                pointsCoords.firstBranch.push({ x: x, y: parabolaVertices.y - yFunc(x)});
+                pointsCoords.secondBranch.push({ x: x, y: parabolaVertices.y + yFunc(x)});
             }
 
             // Сортировка по убыванию Y координат (для правильной отрисовки на графике)
-            pointsCoords.sort((a, b) => a.y - b.y).reverse();
+            pointsCoords.firstBranch.sort((a, b) => a.y - b.y).reverse();
+            pointsCoords.secondBranch.sort((a, b) => a.y - b.y).reverse();
         }
 
         return {
@@ -680,14 +685,20 @@ class ReduceFunctionWizard {
                     .attr("ry", "3")
             });
         } else if (data.chartType === ChartTypes.PARABOLA) {
-            const points = data.pointsCoords.map(coords => `${ getXCoords(coords.x) }, ${ getYCoords(coords.y) }`).join(" ");
+            const firstBranchPoints = data.pointsCoords.firstBranch.map(coords => `${ getXCoords(coords.x) }, ${ getYCoords(coords.y) }`).join(" ");
+            const secondBranchPoints = data.pointsCoords.secondBranch.map(coords => `${ getXCoords(coords.x) }, ${ getYCoords(coords.y) }`).join(" ");
 
-            // Линия параболы
+            // Линии параболы
             rootNode
                 .append("polyline")
-                .attr("points", points)
+                .attr("points", firstBranchPoints)
                 .attr("fill", "none")
-                .attr("stroke", "red")
+                .attr("stroke", "red");
+            rootNode
+                .append("polyline")
+                .attr("points", secondBranchPoints)
+                .attr("fill", "none")
+                .attr("stroke", "red");
 
             // Вершина параболы (текст)
             rootNode
@@ -700,7 +711,16 @@ class ReduceFunctionWizard {
                 .text(`A₁ (${ data.parabolaVertices.x.toFixed(1) }, ${ data.parabolaVertices.y.toFixed(1) })`);
 
             // Точки параболы
-            data.pointsCoords.forEach(coords => {
+            data.pointsCoords.firstBranch.forEach(coords => {
+                rootNode
+                    .append("ellipse")
+                    .attr("cx", getXCoords(coords.x))
+                    .attr("cy", getYCoords(coords.y))
+                    .attr("fill", "blue")
+                    .attr("rx", "3")
+                    .attr("ry", "3")
+            });
+            data.pointsCoords.secondBranch.forEach(coords => {
                 rootNode
                     .append("ellipse")
                     .attr("cx", getXCoords(coords.x))
