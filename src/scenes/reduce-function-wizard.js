@@ -159,7 +159,18 @@ class ReduceFunctionWizard {
             parabolaVertices.x = -(D / A);
             parabolaVertices.y = -((F / (2 * E) - (Math.pow(D, 2) / (2 * E * A))));
 
-            //TO-DO
+            const xFunc = (y) => (Math.sign(pCoefficient) * Math.sqrt(Math.abs(2 * E / A)) * Math.sqrt((y * Math.sign(pCoefficient)) - Math.abs(parabolaVertices.y)));
+
+            for (let i = 0; i < 10; i += 0.2) {
+                const y = parabolaVertices.y + (i * Math.sign(pCoefficient));
+
+                pointsCoords.firstBranch.push({ x: parabolaVertices.x - xFunc(y), y: y });
+                pointsCoords.secondBranch.push({ x: parabolaVertices.x + xFunc(y), y: y });
+            }
+
+            // Сортировка по убыванию Y координат (для правильной отрисовки на графике)
+            pointsCoords.firstBranch.sort((a, b) => a.x - b.x).reverse();
+            pointsCoords.secondBranch.sort((a, b) => a.x - b.x).reverse();
         } else {
             parabolaVertices.x = -(F / (2 * D)) + (Math.pow(E, 2) / ((2 * D) * C));
             parabolaVertices.y = -(E / C);
@@ -170,7 +181,6 @@ class ReduceFunctionWizard {
             for (let i = 0; i < 10; i += 0.2) {
                 const x = parabolaVertices.x + (i * Math.sign(pCoefficient));
 
-                // pointsCoords.push({ x: x, y: yFunc(x) + parabolaVertices.y });
                 pointsCoords.firstBranch.push({ x: x, y: parabolaVertices.y - yFunc(x)});
                 pointsCoords.secondBranch.push({ x: x, y: parabolaVertices.y + yFunc(x)});
             }
