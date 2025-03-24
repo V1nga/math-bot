@@ -15,6 +15,8 @@ const ChartTypes = {
 
 class ReduceFunctionWizard {
     scene;
+    defaultStep = 0.2;
+    defaultIterations = 20;
 
     constructor(ctx) {
         const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":black_nib: Введите кривую 2-го порядка"));
@@ -102,8 +104,13 @@ class ReduceFunctionWizard {
             rightBranch: [hyperbolaVertices.rightBranch]
         };
 
+        const multipleNumber = this.getMultipleNumber({ zeroCoords: coefficients.zeroCoords, hyperbolaVertices: hyperbolaVertices });
+
+        const iterations = this.defaultIterations * multipleNumber;
+        const step = this.defaultStep * multipleNumber;
+
         // Нахождение Y координат для веток
-        for (let i = 0; i < 10; i += 0.2) {
+        for (let i = 0; i < iterations; i += step) {
             const aCoefficient = Math.abs(coefficients.aQuadCoefficient);
             const bCoefficient = Math.abs(coefficients.bQuadCoefficient);
 
@@ -155,13 +162,18 @@ class ReduceFunctionWizard {
             secondBranch: []
         };
 
+        const multipleNumber = this.getMultipleNumber({ zeroCoords: coefficients.zeroCoords, hyperbolaVertices: hyperbolaVertices });
+
+        const iterations = this.defaultIterations * multipleNumber;
+        const step = this.defaultStep * multipleNumber;
+
         if(A !== 0) {
             parabolaVertices.x = -(D / A);
             parabolaVertices.y = -((F / (2 * E) - (Math.pow(D, 2) / (2 * E * A))));
 
             const xFunc = (y) => (Math.sign(pCoefficient) * Math.sqrt(Math.abs(2 * E / A)) * Math.sqrt((y * Math.sign(pCoefficient)) - Math.abs(parabolaVertices.y)));
 
-            for (let i = 0; i < 10; i += 0.2) {
+            for (let i = 0; i < iterations; i += step) {
                 const y = parabolaVertices.y + (i * Math.sign(pCoefficient));
 
                 pointsCoords.firstBranch.push({ x: parabolaVertices.x - xFunc(y), y: y });
@@ -178,7 +190,7 @@ class ReduceFunctionWizard {
             const yFunc = (x) => (Math.sign(pCoefficient) * Math.sqrt(Math.abs(2 * D / C))) * Math.sqrt((x * Math.sign(pCoefficient)) - Math.abs(parabolaVertices.x));
 
             // Нахождение Y координат для веток
-            for (let i = 0; i < 10; i += 0.2) {
+            for (let i = 0; i < iterations; i += step) {
                 const x = parabolaVertices.x + (i * Math.sign(pCoefficient));
 
                 pointsCoords.firstBranch.push({ x: x, y: parabolaVertices.y - yFunc(x)});
@@ -322,12 +334,37 @@ class ReduceFunctionWizard {
         }
 
         const canonicalForm = () => {
+            const sign = (coefficient) => Math.sign(coefficient) < 0 ? "+" : "-";
+
             if(figureData.chartType === ChartTypes.CIRCLE) {
-                return `(x - ${ coefficients.zeroCoords.x })² + (y - ${ coefficients.zeroCoords.y })² = ${ Math.sqrt(coefficients.aQuadCoefficient) }`;
+                const x = Math.abs(coefficients.zeroCoords.x);
+                const xSign = sign(coefficients.zeroCoords.x);
+
+                const y = Math.abs(coefficients.zeroCoords.y);
+                const ySign = sign(coefficients.zeroCoords.y);
+
+                return `(x ${ xSign } ${ x })² + (y ${ ySign } ${ y })² = ${ coefficients.aQuadCoefficient }`;
             } else if (figureData.chartType === ChartTypes.ELLIPSE) {
-                return `x²/${ coefficients.aQuadCoefficient.toFixed(1) } + y²/${ coefficients.bQuadCoefficient.toFixed(1) } = 1`;
+                const x = Math.abs(coefficients.zeroCoords.x).toFixed(1);
+                const xSign = sign(coefficients.zeroCoords.x);
+
+                const y = Math.abs(coefficients.zeroCoords.y).toFixed(1);
+                const ySign = sign(coefficients.zeroCoords.y);
+
+                const a = coefficients.aQuadCoefficient.toFixed(1);
+                const b = coefficients.bQuadCoefficient.toFixed(1);
+
+                return `(x ${ xSign } ${ x })²/${ a } + (y ${ ySign } ${ y })²/${ b } = 1`;
             } else if (figureData.chartType === ChartTypes.HYPERBOLE) {
-                return `(x - ${ coefficients.zeroCoords.x.toFixed(1) })²/${ Math.abs(coefficients.bQuadCoefficient).toFixed(1) } - (y - ${ coefficients.zeroCoords.y.toFixed(1) })²/${ Math.abs(coefficients.aQuadCoefficient).toFixed(1) } = 1`;
+                const x = Math.abs(coefficients.zeroCoords.x).toFixed(1);
+                const xSign = sign(coefficients.zeroCoords.x);
+                const y = Math.abs(coefficients.zeroCoords.y).toFixed(1);
+                const ySign = sign(coefficients.zeroCoords.y);
+
+                const a = Math.abs(coefficients.bQuadCoefficient).toFixed(1);
+                const b = Math.abs(coefficients.aQuadCoefficient).toFixed(1);
+
+                return `(x ${ xSign } ${ x })²/${ a } - (y ${ ySign } ${ y })²/${ b } = 1`;
             } else if (figureData.chartType === ChartTypes.PARABOLA) {
                 // return `(y - `;
                 // console.log(figureData);
@@ -397,6 +434,35 @@ class ReduceFunctionWizard {
         }
     }
 
+    getMultipleNumber(data) {
+        const searchMultipleNumber = (num) => num / 10 > 1 ? Math.ceil(num / 10) : 1;
+        const roundUp = (num) => {
+            const multipleNumber = searchMultipleNumber(num);
+
+            return Math.ceil(num /  multipleNumber) * multipleNumber;
+        }
+
+        const maxValue =
+            roundUp(
+                Math.ceil(
+                    Math.max(
+                        Math.abs(data?.zeroCoords.x || 0),
+                        Math.abs(data?.zeroCoords.y || 0)
+                    )
+                ) + Math.ceil(
+                    Math.max(
+                        Math.abs(data?.halfAxis?.a || 0),
+                        Math.abs(data?.halfAxis?.b || 0),
+                        Math.abs(data?.circleRadius || 0),
+                        Math.abs(data?.hyperbolaVertices?.rightBranch?.x || 0),
+                        Math.abs(data?.hyperbolaVertices?.leftBranch?.x || 0),
+                    )
+                )
+            );
+
+        return searchMultipleNumber(maxValue);
+    }
+
     drawChart(data, imgSize = 1000, padding = 100) {
         const svgNode = new D3Node();
 
@@ -458,18 +524,7 @@ class ReduceFunctionWizard {
             .text(0);
 
         // translation equation values to chart coords system
-        const searchMultipleNumber = (num) => Number(`1${ "0".repeat(num.toString().length - 1) }`);
-        const roundUp = (num) => {
-            const multipleNumber = searchMultipleNumber(num);
-            return Math.ceil(num /  multipleNumber) * multipleNumber;
-        }
-
-        const maxValue =
-            roundUp(
-                Math.ceil(Math.max(Math.abs(data?.zeroCoords.x || 0), Math.abs(data?.zeroCoords.y || 0))) +
-                Math.ceil(Math.max(Math.abs(data?.halfAxis?.a || 0), Math.abs(data?.halfAxis?.b || 0), Math.abs(data?.circleRadius || 0)))
-            );
-        const multipleNumber = searchMultipleNumber(maxValue);
+        const multipleNumber = this.getMultipleNumber(data);
 
         // translation to chart coords system functions
         const getXCoords = (x) => chartZeroCoords.x + ((x / multipleNumber) * chartStep);
