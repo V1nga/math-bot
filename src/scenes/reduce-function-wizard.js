@@ -4,7 +4,7 @@ const {WizardScene} = require("telegraf/scenes");
 const {Composer} = require("telegraf");
 
 const reduceFunctionWizard = (ctx) => {
-    const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":black_nib: Введите кривую 2-го порядка"));
+    const enterHandler = (msgCtx) => msgCtx.reply(emoji.emojify(":writing_hand: Введите кривую 2-го порядка"));
 
     const equationStep = new Composer();
     equationStep.on("text", async (msgCtx) => {
