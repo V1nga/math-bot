@@ -14,6 +14,9 @@ const changeMenuAction = async (ctx) => {
             case MenuTypes.EQUATION_EXAMPLES:
                 menu = menuBuilder.buildExamplesMenu();
                 break;
+            case MenuTypes.USEFUL_MATERIALS:
+                menu = menuBuilder.buildUsefulMaterialsMenu();
+                break;
         }
 
         ctx.editMessageText(menu.text, { reply_markup: menu.buttons.reply_markup });

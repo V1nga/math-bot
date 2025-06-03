@@ -14,10 +14,11 @@ class MenuBuilder {
         const buttons = [
             [Markup.button.callback(emoji.emojify(":writing_hand: Ввести уравнение"), "reducing-function")],
             [Markup.button.callback(emoji.emojify(":chart_with_upwards_trend: Примеры уравнений"), `change-menu:${ MenuTypes.EQUATION_EXAMPLES }`)],
+            [Markup.button.callback(emoji.emojify(":notebook: Полезные материалы"), `change-menu:${ MenuTypes.USEFUL_MATERIALS }`)],
         ]
 
         return createMenu(
-            [emoji.emojify(":clipboard: Меню")],
+            [emoji.emojify(":clipboard: Главное меню")],
             buttons
         );
     }
@@ -38,6 +39,18 @@ class MenuBuilder {
 
         return createMenu(
             [emoji.emojify(":chart_with_upwards_trend: Примеры уравнений")],
+            buttons
+        );
+    }
+    buildUsefulMaterialsMenu() {
+        const buttons = [
+            [Markup.button.url("Приведение уравнения центральной линии. Метод инвариантов.", "https://mathter.pro/angem/3_8_1_metod_invariantov.html")],
+            [Markup.button.url("Приведение уравнения к каноническому виду.", "https://mathter.pro/angem/3_8_privedenie_uravneniya_k_kanonicheskomu_vidu.html")],
+            [Markup.button.callback(emoji.emojify(":arrow_left: Назад"), `change-menu:${ MenuTypes.MAIN }`)],
+        ]
+
+        return createMenu(
+            [emoji.emojify(":notebook: Полезные материалы")],
             buttons
         );
     }

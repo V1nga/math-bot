@@ -50,7 +50,7 @@ class ReduceEquation {
     findCircle(coefficients) {
         return {
             chartType: ChartTypes.CIRCLE,
-            circleRadius: Math.sqrt(coefficients.aCoefficient),
+            circleRadius: Math.abs(coefficients.zeroCoords.y),
             zeroCoords: coefficients.zeroCoords
         }
     }
@@ -143,7 +143,7 @@ class ReduceEquation {
             secondBranch: []
         };
 
-        const multipleNumber = this.getMultipleNumber({ zeroCoords: coefficients.zeroCoords, hyperbolaVertices: hyperbolaVertices });
+        const multipleNumber = this.getMultipleNumber({ zeroCoords: coefficients.zeroCoords, parabolaVertices: parabolaVertices });
 
         const iterations = this.defaultIterations * multipleNumber;
         const step = this.defaultStep * multipleNumber;
