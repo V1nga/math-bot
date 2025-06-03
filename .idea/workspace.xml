@@ -5,16 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4980b5e3-efc1-4544-b9d6-82ac1689168d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/actions/change-menu-action.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/actions/reduce-function-action.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/math/gauss.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/math/math-actions.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/math/reduce-equation.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/menu/menu-builder.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/menu/menu-types.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actions-init.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actions-init.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/reduce-function.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/start-command.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/start-command.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/gauss.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/math-actions.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scenes/reduce-function-wizard.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/reduce-function-wizard.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scenes/scenes-init.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/scenes/scenes-init.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -66,6 +89,7 @@
       <workItem from="1739170111822" duration="5361000" />
       <workItem from="1739264657344" duration="3480000" />
       <workItem from="1742799210832" duration="5210000" />
+      <workItem from="1748960301439" duration="6757000" />
     </task>
     <servers />
   </component>
