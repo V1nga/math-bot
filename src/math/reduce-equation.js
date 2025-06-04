@@ -50,7 +50,7 @@ class ReduceEquation {
     findCircle(coefficients) {
         return {
             chartType: ChartTypes.CIRCLE,
-            circleRadius: Math.abs(coefficients.zeroCoords.y),
+            circleRadius: Math.sqrt(coefficients.aQuadCoefficient),
             zeroCoords: coefficients.zeroCoords
         }
     }
