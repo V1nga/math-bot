@@ -208,6 +208,8 @@ class ReduceEquation {
             return this.findHyperbole(coefficients);
         } else if (coefficients.bDeterminant === 0 && coefficients.aDeterminant !== 0) {
             return this.findParabola(coefficients);
+        } else {
+            throw { msg: "Фигура не определена" };
         }
     };
 

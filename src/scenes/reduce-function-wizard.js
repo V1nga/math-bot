@@ -9,10 +9,15 @@ const reduceFunctionWizard = (ctx) => {
     const equationStep = new Composer();
     equationStep.on("text", async (msgCtx) => {
         const reduceEquation = new ReduceEquation();
-        const { msg, chart } = reduceEquation.writeSolution(msgCtx.message.text);
 
-        await msgCtx.reply(msg, { parse_mode: "MarkdownV2" });
-        await msgCtx.replyWithPhoto({ source: chart });
+        try {
+            const { msg, chart } = reduceEquation.writeSolution(msgCtx.message.text);
+
+            await msgCtx.reply(msg, { parse_mode: "MarkdownV2" });
+            await msgCtx.replyWithPhoto({ source: chart });
+        } catch (ex) {
+            await msgCtx.reply(emoji.emojify(`:warning: ${ ex?.msg ? ex.msg : "Произошла неизвестная ошибка" }`));
+        }
 
         return msgCtx.scene.leave();
     });
